@@ -2,6 +2,11 @@
 
 #include <math.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <pwd.h>
+
 typedef struct {
     float *x;
     float *y;
@@ -167,7 +172,22 @@ void train_char_rnn(char *cfgfile, char *weightfile, char *filename, int clear, 
         size = strlen((const char*)text);
     }
 
-    char *backup_directory = "/home/pjreddie/backup/";
+
+//https://stackoverflow.com/questions/7430248/creating-a-new-directory-in-c
+//https://stackoverflow.com/questions/2910377/get-home-directory-in-linux    
+    const char *homedir;
+    if(( homedir = getenv("HOME")) == NULL) {
+    	homedir = getpwuid(getuid())->pw_dir;
+    }
+
+     char backup_directory[256];
+    sprintf(backup_directory, "%s/backup", homedir);
+
+struct stat st={0};
+if( stat(backup_directory, &st) == -1){
+	mkdir(backup_directory,0777);
+}
+
     char *base = basecfg(cfgfile);
     fprintf(stderr, "%s\n", base);
     float avg_loss = -1;
